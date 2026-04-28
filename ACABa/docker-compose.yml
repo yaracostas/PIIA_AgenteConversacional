@@ -1,0 +1,11 @@
+services:
+  turn-server:
+    build: ./server
+    container_name: turn-server
+    ports:
+      - "8770:8770"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - USE_GPU=true
+    gpus: all
+    restart: unless-stopped

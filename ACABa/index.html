@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Voice AI</title>
+</head>
+<body>
+    <h1>🎙️ Voice Assistant (ACABa)</h1>
+    <button id="btn">Habla <3</button>
+
+    <script>
+        const ws = new WebSocket("ws://localhost:8770");
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        ws.onmessage = async (event) => {
+            if (typeof event.data === "string") {
+                console.log("Servidor:", event.data);
+            } else {
+                console.log("🎧 Reproduciendo...");
+                const arrayBuffer = await event.data.arrayBuffer();
+                const audioCtx = new AudioContext();
+                const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                const source = audioCtx.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioCtx.destination);
+                source.start();
+            }
+        };
+
+        document.getElementById("btn").onclick = async () => {
+            if (!mediaRecorder) {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = e => {
+                    ws.send(e.data);
+                };
+
+                mediaRecorder.start(200); // envía chunks cada 200ms
+                console.log("🎙️ Grabando...");
+            } else {
+                mediaRecorder.stop();
+                mediaRecorder = null;
+                console.log("⏹️ Parado");
+            }
+        };
+    </script>
+</body>
+</html>
