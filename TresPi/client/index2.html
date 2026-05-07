@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TresPi - Interfaz conversacional</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+    }
+
+    :root {
+      --bg: #f8f1f1;
+      --border: #ead0d0;
+
+      --granate: #8b1e1e;
+      --granate-dark: #5a0f0f;
+      --granate-soft: #c0392b;
+      --granate-light: #f3d6d3;
+
+      --text: #2b1515;
+      --muted: #7a5f5f;
+
+      --agent-bubble: #fff0ee;
+      --user-bubble: linear-gradient(135deg, #8b1e1e, #c0392b);
+
+      --shadow: 0 18px 45px rgba(90, 15, 15, 0.13);
+      --shadow-soft: 0 10px 28px rgba(90, 15, 15, 0.09);
+    }
+
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(192, 57, 43, 0.16), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(139, 30, 30, 0.14), transparent 35%),
+        linear-gradient(135deg, #fffafa 0%, #f8eeee 48%, #f1dddd 100%);
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .topbar {
+      height: 82px;
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(139, 30, 30, 0.14);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--granate-dark), var(--granate-soft));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 25px;
+      box-shadow: 0 12px 26px rgba(139, 30, 30, 0.28);
+      flex-shrink: 0;
+    }
+
+    .brand h1 {
+      font-size: 29px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.9px;
+      color: var(--granate-dark);
+      margin-bottom: 5px;
+    }
+
+    .brand p {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-pill {
+      border: 1px solid #e8b0aa;
+      background: #fff1ef;
+      color: var(--granate);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border: 1px solid rgba(139, 30, 30, 0.16);
+      background: #fff;
+      border-radius: 999px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .user-avatar-top {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--granate), var(--granate-soft));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--granate-dark);
+    }
+
+    .user-role {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .settings-btn {
+      width: 42px;
+      height: 42px;
+      border: none;
+      border-radius: 50%;
+      background: var(--granate);
+      color: white;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 24px rgba(139, 30, 30, 0.25);
+      transition: 0.2s ease;
+    }
+
+    .settings-btn:hover {
+      transform: rotate(18deg) scale(1.04);
+      background: var(--granate-dark);
+    }
+
+    .layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      padding: 24px;
+      min-height: calc(100vh - 82px);
+      position: relative;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 106px;
+      left: 24px;
+      bottom: 24px;
+      width: 310px;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(139, 30, 30, 0.16);
+      border-radius: 30px;
+      box-shadow: var(--shadow);
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      z-index: 35;
+      transform: translateX(-360px);
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.25s ease;
+    }
+
+    body.sidebar-open .sidebar {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sidebar-backdrop {
+      position: fixed;
+      inset: 82px 0 0 0;
+      background: rgba(43, 21, 21, 0.20);
+      backdrop-filter: blur(2px);
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.2s ease;
+    }
+
+    body.sidebar-open .sidebar-backdrop {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, var(--granate-dark), var(--granate), var(--granate-soft));
+      color: white;
+      box-shadow: 0 14px 28px rgba(139, 30, 30, 0.24);
+      flex-shrink: 0;
+    }
+
+    .sidebar-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .sidebar-title {
+      font-size: 21px;
+      font-weight: 900;
+      margin-bottom: 7px;
+    }
+
+    .close-sidebar-btn {
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      color: white;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .sidebar-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.84);
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    .new-chat-btn {
+      width: 100%;
+      border: none;
+      background: linear-gradient(135deg, var(--granate), var(--granate-soft));
+      color: white;
+      font-weight: 900;
+      font-size: 15px;
+      padding: 16px;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      box-shadow: 0 12px 25px rgba(139, 30, 30, 0.22);
+      flex-shrink: 0;
+    }
+
+    .new-chat-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 30px rgba(139, 30, 30, 0.3);
+    }
+
+    .sidebar-section-label {
+      font-size: 12px;
+      color: var(--granate);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+      padding-left: 4px;
+      flex-shrink: 0;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      padding-right: 3px;
+      min-height: 0;
+    }
+
+    .history-item {
+      padding: 14px;
+      border-radius: 17px;
+      background: #fff;
+      border: 1px solid #efceca;
+      cursor: pointer;
+      transition: 0.18s ease;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .history-item:hover {
+      background: #fff1ef;
+      transform: translateX(2px);
+    }
+
+    .history-item.active {
+      background: linear-gradient(135deg, #fff3f1, #f7d9d5);
+      border-color: #dc9a91;
+      box-shadow: 0 8px 18px rgba(139, 30, 30, 0.10);
+    }
+
+    .history-item.active::before {
+      content: "";
+      position: absolute;
+      left: -1px;
+      top: 14px;
+      bottom: 14px;
+      width: 4px;
+      border-radius: 999px;
+      background: var(--granate);
+    }
+
+    .history-item-title {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 5px;
+      color: var(--granate-dark);
+    }
+
+    .history-item-meta {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .main-panel {
+      background: rgba(255, 255, 255, 0.91);
+      border: 1px solid rgba(139, 30, 30, 0.16);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: calc(100vh - 130px);
+      min-height: 600px;
+      width: 100%;
+    }
+
+    .chat-header {
+      padding: 25px 30px;
+      border-bottom: 1px solid #efceca;
+      background:
+        radial-gradient(circle at top right, rgba(192, 57, 43, 0.14), transparent 35%),
+        linear-gradient(135deg, #ffffff, #fff1ef);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-shrink: 0;
+    }
+
+    .chat-header-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .history-toggle-btn {
+      flex-shrink: 0;
+      height: 44px;
+      padding: 0 18px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--granate), var(--granate-soft));
+      color: white;
+      border: none;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(139, 30, 30, 0.22);
+      transition: 0.2s ease;
+    }
+
+    .history-toggle-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(139, 30, 30, 0.28);
+    }
+
+    .chat-header h2 {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      margin-bottom: 5px;
+      color: var(--granate-dark);
+    }
+
+    .chat-header p {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .chat-badge {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--granate-light);
+      color: var(--granate-dark);
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .chat {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 30px;
+      scroll-behavior: smooth;
+      background:
+        linear-gradient(rgba(255,255,255,0.86), rgba(255,255,255,0.86)),
+        radial-gradient(circle at top left, rgba(139,30,30,0.08), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(192,57,43,0.08), transparent 30%);
+    }
+
+    .chat::-webkit-scrollbar,
+    .history-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat::-webkit-scrollbar-thumb,
+    .history-list::-webkit-scrollbar-thumb {
+      background: rgba(139, 30, 30, 0.30);
+      border-radius: 999px;
+    }
+
+    .chat::-webkit-scrollbar-track,
+    .history-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .message-row {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 24px;
+      align-items: flex-start;
+    }
+
+    .message-row.user {
+      justify-content: flex-end;
+    }
+
+    .message-row.agent {
+      justify-content: flex-start;
+    }
+
+    .bubble {
+      max-width: 720px;
+      border-radius: 24px;
+      padding: 16px 18px;
+      box-shadow: 0 10px 25px rgba(90, 15, 15, 0.08);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .agent .bubble {
+      background: var(--agent-bubble);
+      color: var(--text);
+      border: 1px solid #efc7c2;
+      border-top-left-radius: 8px;
+    }
+
+    .user .bubble {
+      background: var(--user-bubble);
+      color: white;
+      border-top-right-radius: 8px;
+    }
+
+    .speaker-name {
+      display: block;
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .agent .speaker-name {
+      color: var(--granate);
+    }
+
+    .user .speaker-name {
+      color: rgba(255,255,255,0.88);
+    }
+
+    .time {
+      display: block;
+      text-align: right;
+      font-size: 12px;
+      margin-top: 8px;
+      opacity: 0.75;
+    }
+
+    .user-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--granate-dark), var(--granate-soft));
+      color: white;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 4px;
+      box-shadow: 0 10px 22px rgba(139, 30, 30, 0.22);
+    }
+
+    .hedgehog-avatar {
+      width: 104px;
+      height: 78px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 18px;
+      background: transparent;
+    }
+
+    .hedgehog-img {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 102px;
+      height: auto;
+      display: block;
+      user-select: none;
+      pointer-events: none;
+      object-fit: contain;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(0 4px 8px rgba(90, 15, 15, 0.10));
+    }
+
+    .hedgehog-closed {
+      opacity: 1;
+    }
+
+    .hedgehog-open {
+      opacity: 0;
+    }
+
+    .hedgehog-avatar.talking .hedgehog-closed {
+      animation: closedMouthFrame 0.42s steps(1, end) infinite;
+    }
+
+    .hedgehog-avatar.talking .hedgehog-open {
+      animation: openMouthFrame 0.42s steps(1, end) infinite;
+    }
+
+    .hedgehog-avatar.talking {
+      animation: hedgehogTalk 0.32s infinite alternate ease-in-out;
+    }
+
+    @keyframes closedMouthFrame {
+      0%, 44% {
+        opacity: 1;
+      }
+      45%, 100% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes openMouthFrame {
+      0%, 44% {
+        opacity: 0;
+      }
+      45%, 100% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes hedgehogTalk {
+      from {
+        transform: translateY(0px);
+      }
+      to {
+        transform: translateY(-2px);
+      }
+    }
+
+    .typing-dots {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      height: 20px;
+    }
+
+    .typing-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--granate);
+      animation: typing 1s infinite ease-in-out;
+    }
+
+    .typing-dots span:nth-child(2) { animation-delay: 0.18s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.36s; }
+
+    @keyframes typing {
+      0%, 80%, 100% {
+        transform: translateY(0);
+        opacity: 0.35;
+      }
+      40% {
+        transform: translateY(-6px);
+        opacity: 1;
+      }
+    }
+
+    .controls {
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(18px);
+      border-top: 1px solid rgba(139, 30, 30, 0.16);
+      padding: 18px 22px;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      z-index: 5;
+      flex-shrink: 0;
+    }
+
+    .controls button {
+      border: none;
+      min-width: 220px;
+      padding: 16px 24px;
+      border-radius: 18px;
+      color: white;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .controls button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(90, 15, 15, 0.18);
+    }
+
+    .start-btn {
+      background: linear-gradient(135deg, var(--granate), var(--granate-soft));
+    }
+
+    .end-btn {
+      background: linear-gradient(135deg, #7f1d1d, #dc2626);
+    }
+
+    .clear-btn {
+      background: linear-gradient(135deg, #3d1b1b, #7c2d2d);
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        height: auto;
+        min-height: calc(100vh - 82px);
+      }
+
+      .main-panel {
+        height: 700px;
+        min-height: 600px;
+      }
+
+      .controls {
+        flex-direction: column;
+        padding: 16px;
+      }
+
+      .controls button {
+        width: 100%;
+        min-width: unset;
+      }
+
+      .topbar {
+        padding: 0 18px;
+      }
+
+      .brand h1 {
+        font-size: 24px;
+      }
+
+      .status-pill {
+        display: none;
+      }
+
+      .user-role {
+        display: none;
+      }
+
+      .chat-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .chat-header-left {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .history-toggle-btn {
+        width: fit-content;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .top-actions {
+        gap: 8px;
+      }
+
+      .user-info {
+        display: none;
+      }
+
+      .layout {
+        padding: 14px;
+      }
+
+      .chat {
+        padding: 20px;
+      }
+
+      .bubble {
+        max-width: 100%;
+        font-size: 15px;
+      }
+
+      .hedgehog-avatar {
+        width: 82px;
+        height: 62px;
+      }
+
+      .hedgehog-img {
+        width: 82px;
+      }
+
+      .sidebar {
+        left: 14px;
+        right: 14px;
+        top: 100px;
+        bottom: 14px;
+        width: auto;
+        transform: translateX(-110%);
+      }
+
+      body.sidebar-open .sidebar {
+        transform: translateX(0);
+      }
+    }
+    /* Forzar alternancia de boca con JavaScript */
+    .hedgehog-avatar.talking.mouth-open-frame .hedgehog-closed {
+      opacity: 0 !important;
+      animation: none !important;
+    }
+
+    .hedgehog-avatar.talking.mouth-open-frame .hedgehog-open {
+      opacity: 1 !important;
+      animation: none !important;
+    }
+
+    .hedgehog-avatar.talking:not(.mouth-open-frame) .hedgehog-closed {
+      opacity: 1 !important;
+      animation: none !important;
+    }
+
+    .hedgehog-avatar.talking:not(.mouth-open-frame) .hedgehog-open {
+      opacity: 0 !important;
+      animation: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🦔</div>
+      <div>
+        <h1>TresPi</h1>
+        <p>Agente conversacional por voz</p>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <div class="status-pill" id="statusPill">Conversación detenida</div>
+
+      <div class="user-card">
+        <div class="user-avatar-top">Y</div>
+        <div class="user-info">
+          <span class="user-name">Yara</span>
+          <span class="user-role">Usuario</span>
+        </div>
+      </div>
+
+      <button class="settings-btn" title="Configuración" onclick="openSettings()">⚙</button>
+    </div>
+  </header>
+
+  <div class="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title-row">
+          <div>
+            <div class="sidebar-title">Conversaciones</div>
+            <div class="sidebar-subtitle">
+              Crea nuevas conversaciones y accede rápidamente al historial reciente.
+            </div>
+          </div>
+          <button class="close-sidebar-btn" onclick="closeSidebar()">×</button>
+        </div>
+      </div>
+
+      <button class="new-chat-btn" onclick="newConversation()">
+        + Nueva conversación
+      </button>
+
+      <div class="sidebar-section-label">Historial</div>
+
+      <div class="history-list" id="historyList">
+        <div class="history-item active">
+          <div class="history-item-title">Conversación actual</div>
+          <div class="history-item-meta">Activa ahora</div>
+        </div>
+
+        <div class="history-item">
+          <div class="history-item-title">Prueba de voz</div>
+          <div class="history-item-meta">Hoy · 16:04</div>
+        </div>
+
+        <div class="history-item">
+          <div class="history-item-title">Demo del agente</div>
+          <div class="history-item-meta">Ayer · 19:12</div>
+        </div>
+
+        <div class="history-item">
+          <div class="history-item-title">Ajuste de interrupciones</div>
+          <div class="history-item-meta">Ayer · 18:40</div>
+        </div>
+
+        <div class="history-item">
+          <div class="history-item-title">Pipeline VAD-ASR-LLM-TTS</div>
+          <div class="history-item-meta">Lunes · 12:20</div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="main-panel">
+      <div class="chat-header">
+        <div class="chat-header-left">
+          <button class="history-toggle-btn" onclick="toggleSidebar()">☰ Historial</button>
+
+          <div>
+            <h2>Conversación con TresPi</h2>
+            <p>Habla con el agente y visualiza la conversación en tiempo real.</p>
+          </div>
+        </div>
+
+        <div class="chat-badge">Modo voz</div>
+      </div>
+
+      <div class="chat" id="chat">
+        <div class="message-row agent">
+          <div class="hedgehog-avatar idle">
+            <img class="hedgehog-img hedgehog-closed" src="./erizo_callado.jpeg" alt="Erizo" />
+            <img class="hedgehog-img hedgehog-open" src="./erizo_hablando.jpeg" alt="Erizo hablando" />
+          </div>
+
+          <div class="bubble">
+            <span class="speaker-name">TresPi</span>
+            Hola, soy TresPi. Pulsa “Iniciar conversación” para comenzar una conversación por voz.
+            <span class="time">Ahora</span>
+          </div>
+        </div>
+
+        <div class="message-row user">
+          <div class="bubble">
+            <span class="speaker-name">Usuario</span>
+            Quiero iniciar una conversación por voz.
+            <span class="time">Ahora</span>
+          </div>
+          <div class="user-avatar">Y</div>
+        </div>
+      </div>
+
+      <section class="controls">
+        <button class="start-btn" onclick="startConversation()">Iniciar conversación</button>
+        <button class="end-btn" onclick="endConversation()">Finalizar conversación</button>
+        <button class="clear-btn" onclick="clearChat()">Limpiar chat</button>
+      </section>
+    </section>
+  </main>
+
+<script>
+  const chat = document.getElementById("chat");
+  const statusPill = document.getElementById("statusPill");
+  const historyList = document.getElementById("historyList");
+
+  const WS_URL = "ws://localhost:8770";
+
+  let socket = null;
+  let audioStream = null;
+  let conversationActive = false;
+  let conversationCounter = 1;
+
+  let assistantAudio = null;
+  let audioIsPlaying = false;
+
+  let audioContext = null;
+  let sourceNode = null;
+  let processorNode = null;
+  let silenceGain = null;
+  let pcmBuffer = [];
+
+  let assistantIsSpeaking = false;
+  let mouthAnimationInterval = null;
+  let localSpeechDuringAssistantStreak = 0;
+  let interruptCooldown = false;
+
+  const LOCAL_INTERRUPT_RMS_THRESHOLD = 0.025;
+  const LOCAL_INTERRUPT_STREAK = 2;
+
+  function toggleSidebar() {
+    document.body.classList.toggle("sidebar-open");
+  }
+
+  function closeSidebar() {
+    document.body.classList.remove("sidebar-open");
+  }
+
+  function getCurrentTime() {
+    const now = new Date();
+    return now.toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+  function scrollToBottom() {
+    requestAnimationFrame(() => {
+      chat.scrollTo({
+        top: chat.scrollHeight,
+        behavior: "smooth"
+      });
+    });
+  }
+
+  function escapeHTML(text) {
+    const div = document.createElement("div");
+    div.textContent = text ?? "";
+    return div.innerHTML;
+  }
+
+  function hedgehogHTML(mode = "idle") {
+    const avatarClass = mode === "talking" ? "hedgehog-avatar talking" : "hedgehog-avatar idle";
+
+    return `
+      <div class="${avatarClass}">
+        <img class="hedgehog-img hedgehog-closed" src="./erizo_callado.jpeg" alt="Erizo" />
+        <img class="hedgehog-img hedgehog-open" src="./erizo_hablando.jpeg" alt="Erizo hablando" />
+      </div>
+    `;
+  }
+
+  function setAgentSpeaking(isSpeaking) {
+    assistantIsSpeaking = isSpeaking;
+
+    const avatars = document.querySelectorAll(".hedgehog-avatar");
+
+    avatars.forEach((avatar) => {
+      avatar.classList.toggle("talking", isSpeaking);
+      avatar.classList.toggle("idle", !isSpeaking);
+
+      if (!isSpeaking) {
+        avatar.classList.remove("mouth-open-frame");
+      }
+    });
+
+    if (isSpeaking) {
+      startMouthAnimation();
+    } else {
+      stopMouthAnimation();
+    }
+  }
+
+  function startMouthAnimation() {
+    stopMouthAnimation();
+
+    mouthAnimationInterval = setInterval(() => {
+      document.querySelectorAll(".hedgehog-avatar.talking").forEach((avatar) => {
+        avatar.classList.toggle("mouth-open-frame");
+      });
+    }, 180);
+  }
+
+  function stopMouthAnimation() {
+    if (mouthAnimationInterval) {
+      clearInterval(mouthAnimationInterval);
+      mouthAnimationInterval = null;
+    }
+
+    document.querySelectorAll(".hedgehog-avatar").forEach((avatar) => {
+      avatar.classList.remove("mouth-open-frame");
+    });
+  }
+
+  function addUserMessage(text) {
+    const row = document.createElement("div");
+    row.className = "message-row user";
+    row.innerHTML = `
+      <div class="bubble">
+        <span class="speaker-name">Usuario</span>
+        ${escapeHTML(text)}
+        <span class="time">${getCurrentTime()}</span>
+      </div>
+      <div class="user-avatar">Y</div>
+    `;
+    chat.appendChild(row);
+    scrollToBottom();
+  }
+
+  function addAgentMessage(text, mode = "idle") {
+    const row = document.createElement("div");
+    row.className = "message-row agent";
+    row.innerHTML = `
+      ${hedgehogHTML(mode)}
+      <div class="bubble">
+        <span class="speaker-name">TresPi</span>
+        ${escapeHTML(text)}
+        <span class="time">${getCurrentTime()}</span>
+      </div>
+    `;
+    chat.appendChild(row);
+    scrollToBottom();
+  }
+
+  function removeThinkingMessage() {
+    const thinking = document.getElementById("thinking-message");
+    if (thinking) thinking.remove();
+  }
+
+  function setStatus(text, active = false) {
+    statusPill.textContent = text;
+
+    if (active) {
+      statusPill.style.background = "#f3d6d3";
+      statusPill.style.color = "#5a0f0f";
+      statusPill.style.borderColor = "#dc9a91";
+    } else {
+      statusPill.style.background = "#fff1ef";
+      statusPill.style.color = "#8b1e1e";
+      statusPill.style.borderColor = "#e8b0aa";
+    }
+  }
+
+  function createHistoryItem(title, meta = "Ahora") {
+    const item = document.createElement("div");
+    item.className = "history-item active";
+    item.innerHTML = `
+      <div class="history-item-title">${escapeHTML(title)}</div>
+      <div class="history-item-meta">${escapeHTML(meta)}</div>
+    `;
+
+    document.querySelectorAll(".history-item").forEach(existing => {
+      existing.classList.remove("active");
+    });
+
+    historyList.prepend(item);
+  }
+
+  async function startConversation() {
+    if (conversationActive) return;
+
+    conversationActive = true;
+    setStatus("Conectando con el servidor...", true);
+    removeThinkingMessage();
+
+    try {
+      socket = new WebSocket(WS_URL);
+      socket.binaryType = "arraybuffer";
+
+      socket.onopen = async () => {
+        console.log("WebSocket conectado:", WS_URL);
+        setStatus("Conectado. Activando micrófono...", true);
+        await startMicrophoneStreaming();
+      };
+
+      socket.onmessage = async (event) => {
+        await handleServerMessage(event);
+      };
+
+      socket.onerror = (error) => {
+        console.error("Error WebSocket:", error);
+        setStatus("Error de conexión", false);
+        addAgentMessage(
+          "No he podido conectar con el servidor. Comprueba que Docker esté levantado y que el servidor esté escuchando en el puerto 8770.",
+          "idle"
+        );
+        stopConversationLocally();
+      };
+
+      socket.onclose = () => {
+        console.log("WebSocket cerrado");
+        stopConversationLocally();
+        setStatus("Conversación detenida", false);
+      };
+
+    } catch (error) {
+      console.error(error);
+      setStatus("Error al iniciar", false);
+      addAgentMessage(
+        "No se pudo iniciar la conversación. Revisa la conexión con el servidor y los permisos del navegador.",
+        "idle"
+      );
+      stopConversationLocally();
+    }
+  }
+
+  async function startMicrophoneStreaming() {
+    try {
+      console.log("Pidiendo acceso al micrófono...");
+
+      audioStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1
+        }
+      });
+
+      console.log("Micrófono concedido:", audioStream);
+
+      audioContext = new AudioContext();
+
+      if (audioContext.state === "suspended") {
+        await audioContext.resume();
+      }
+
+      sourceNode = audioContext.createMediaStreamSource(audioStream);
+
+      processorNode = audioContext.createScriptProcessor(4096, 1, 1);
+
+      silenceGain = audioContext.createGain();
+      silenceGain.gain.value = 0;
+
+      const TARGET_SAMPLE_RATE = 16000;
+      const FRAME_DURATION_MS = 20;
+      const FRAME_SAMPLES = TARGET_SAMPLE_RATE * FRAME_DURATION_MS / 1000;
+
+      processorNode.onaudioprocess = (event) => {
+        if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+        const input = event.inputBuffer.getChannelData(0);
+
+        detectLocalInterruption(input);
+
+        const downsampled = downsampleTo16k(input, audioContext.sampleRate);
+        const pcm16 = floatTo16BitPCM(downsampled);
+
+        for (let i = 0; i < pcm16.length; i++) {
+          pcmBuffer.push(pcm16[i]);
+        }
+
+        while (pcmBuffer.length >= FRAME_SAMPLES) {
+          const frameSamples = pcmBuffer.slice(0, FRAME_SAMPLES);
+          pcmBuffer = pcmBuffer.slice(FRAME_SAMPLES);
+
+          const frame = new Int16Array(frameSamples);
+          socket.send(frame.buffer);
+        }
+      };
+
+      sourceNode.connect(processorNode);
+      processorNode.connect(silenceGain);
+      silenceGain.connect(audioContext.destination);
+
+      setStatus("Escuchando...", true);
+      addAgentMessage("Te escucho. Puedes empezar a hablar.", "idle");
+
+    } catch (error) {
+      console.error("Error real al iniciar el micrófono:", error);
+
+      addAgentMessage(
+        "No he podido iniciar correctamente el micrófono. Revisa permisos o si otra aplicación lo está usando.",
+        "idle"
+      );
+
+      endConversation();
+    }
+  }
+
+  function detectLocalInterruption(input) {
+    const canInterrupt = audioIsPlaying || assistantIsSpeaking;
+
+    if (!canInterrupt || interruptCooldown) {
+      localSpeechDuringAssistantStreak = 0;
+      return;
+    }
+
+    const rms = calculateRMS(input);
+
+    if (rms > LOCAL_INTERRUPT_RMS_THRESHOLD) {
+      localSpeechDuringAssistantStreak += 1;
+    } else {
+      localSpeechDuringAssistantStreak = 0;
+    }
+
+    if (localSpeechDuringAssistantStreak >= LOCAL_INTERRUPT_STREAK) {
+      triggerLocalInterrupt();
+    }
+  }
+
+  function triggerLocalInterrupt() {
+    if ((!audioIsPlaying && !assistantIsSpeaking) || interruptCooldown) return;
+
+    console.log("Interrupción local detectada");
+
+    interruptCooldown = true;
+    localSpeechDuringAssistantStreak = 0;
+
+    stopAssistantAudio();
+    setAgentSpeaking(false);
+    removeThinkingMessage();
+
+    setStatus("Interrupción detectada. Te escucho...", true);
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        type: "interrupt"
+      }));
+    }
+
+    setTimeout(() => {
+      interruptCooldown = false;
+    }, 1200);
+  }
+
+  function calculateRMS(buffer) {
+    let sum = 0;
+
+    for (let i = 0; i < buffer.length; i++) {
+      sum += buffer[i] * buffer[i];
+    }
+
+    return Math.sqrt(sum / buffer.length);
+  }
+
+  function downsampleTo16k(buffer, inputSampleRate) {
+    const targetSampleRate = 16000;
+
+    if (inputSampleRate === targetSampleRate) {
+      return buffer;
+    }
+
+    const sampleRateRatio = inputSampleRate / targetSampleRate;
+    const newLength = Math.round(buffer.length / sampleRateRatio);
+    const result = new Float32Array(newLength);
+
+    let offsetResult = 0;
+    let offsetBuffer = 0;
+
+    while (offsetResult < result.length) {
+      const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+
+      let accum = 0;
+      let count = 0;
+
+      for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+        accum += buffer[i];
+        count++;
+      }
+
+      result[offsetResult] = count > 0 ? accum / count : 0;
+
+      offsetResult++;
+      offsetBuffer = nextOffsetBuffer;
+    }
+
+    return result;
+  }
+
+  function floatTo16BitPCM(float32Array) {
+    const int16Array = new Int16Array(float32Array.length);
+
+    for (let i = 0; i < float32Array.length; i++) {
+      let sample = Math.max(-1, Math.min(1, float32Array[i]));
+      int16Array[i] = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+    }
+
+    return int16Array;
+  }
+
+  async function handleServerMessage(event) {
+    if (event.data instanceof Blob) {
+      await playAssistantAudioFromBlob(event.data);
+      return;
+    }
+
+    if (event.data instanceof ArrayBuffer) {
+      const blob = new Blob([event.data], { type: "audio/wav" });
+      await playAssistantAudioFromBlob(blob);
+      return;
+    }
+
+    let data;
+
+    try {
+      data = JSON.parse(event.data);
+    } catch (error) {
+      console.warn("Mensaje recibido no JSON:", event.data);
+
+      if (typeof event.data === "string" && event.data.trim().length > 0) {
+        addAgentMessage(event.data, "idle");
+      }
+
+      return;
+    }
+
+    console.log("Mensaje del servidor:", data);
+
+    const text =
+      data.text ||
+      data.transcript ||
+      data.transcription ||
+      data.message ||
+      data.response ||
+      data.answer ||
+      "";
+
+    switch (data.type) {
+      case "ready":
+        setStatus("Servidor listo", true);
+        break;
+
+      case "listening":
+        setStatus("Escuchando...", true);
+        break;
+
+      case "user_transcript":
+      case "transcription":
+      case "transcript":
+      case "user_text":
+      case "asr_result":
+        if (text) {
+          addUserMessage(text);
+        }
+        break;
+
+      case "assistant_thinking":
+      case "thinking":
+        setStatus("TresPi está preparando la respuesta...", true);
+        break;
+
+      case "assistant_started":
+      case "tts_started":
+      case "speaking_started":
+        removeThinkingMessage();
+        audioIsPlaying = true;
+        setAgentSpeaking(true);
+        setStatus("TresPi está hablando...", true);
+        break;
+
+      case "assistant_text":
+      case "llm_response":
+      case "response_text":
+      case "assistant_response":
+        removeThinkingMessage();
+
+        if (text) {
+          addAgentMessage(text, "idle");
+        }
+        break;
+
+      case "assistant_audio_base64":
+      case "audio_base64":
+        removeThinkingMessage();
+
+        if (data.audio) {
+          await playAssistantAudioBase64(data.audio);
+        }
+        break;
+
+      case "assistant_audio_url":
+      case "audio_url":
+        removeThinkingMessage();
+
+        if (data.url) {
+          await playAssistantAudioUrl(data.url);
+        }
+        break;
+
+      case "assistant_finished":
+      case "tts_finished":
+      case "speaking_finished":
+        /*
+          No apagamos automáticamente el erizo aquí porque el backend puede mandar
+          assistant_finished justo después de enviar el audio, pero el navegador
+          todavía puede estar reproduciéndolo.
+        */
+        if (!audioIsPlaying) {
+          setAgentSpeaking(false);
+          setStatus("Escuchando...", true);
+        }
+        break;
+
+      case "interrupted":
+        stopAssistantAudio();
+        setAgentSpeaking(false);
+        removeThinkingMessage();
+        setStatus("Interrupción detectada. Te escucho...", true);
+        break;
+
+      case "error":
+        removeThinkingMessage();
+        stopAssistantAudio();
+        addAgentMessage(text || "Ha ocurrido un error en el servidor.", "idle");
+        setStatus("Error", false);
+        break;
+
+      default:
+        console.warn("Tipo de mensaje no reconocido:", data);
+
+        if (text) {
+          addAgentMessage(text, "idle");
+        }
+
+        break;
+    }
+  }
+
+  function endConversation() {
+    if (!conversationActive) {
+      setStatus("La conversación ya estaba detenida", false);
+      return;
+    }
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({
+        type: "stop_conversation"
+      }));
+    }
+
+    stopConversationLocally();
+    addAgentMessage("Conversación finalizada. Hasta luego.", "idle");
+    setStatus("Conversación detenida", false);
+  }
+
+  function stopConversationLocally() {
+    conversationActive = false;
+
+    removeThinkingMessage();
+    stopAssistantAudio();
+    setAgentSpeaking(false);
+
+    if (processorNode) {
+      processorNode.disconnect();
+    }
+
+    if (sourceNode) {
+      sourceNode.disconnect();
+    }
+
+    if (silenceGain) {
+      silenceGain.disconnect();
+    }
+
+    if (audioContext && audioContext.state !== "closed") {
+      audioContext.close();
+    }
+
+    if (audioStream) {
+      audioStream.getTracks().forEach(track => track.stop());
+    }
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.close();
+    }
+
+    audioStream = null;
+    socket = null;
+    audioContext = null;
+    sourceNode = null;
+    processorNode = null;
+    silenceGain = null;
+    pcmBuffer = [];
+    localSpeechDuringAssistantStreak = 0;
+    interruptCooldown = false;
+    audioIsPlaying = false;
+  }
+
+  async function playAssistantAudioUrl(audioUrl) {
+    stopAssistantAudio();
+
+    audioIsPlaying = true;
+    setAgentSpeaking(true);
+    setStatus("TresPi está hablando...", true);
+
+    assistantAudio = new Audio(audioUrl);
+
+    assistantAudio.onended = () => {
+      audioIsPlaying = false;
+      setAgentSpeaking(false);
+      setStatus("Escuchando...", true);
+    };
+
+    assistantAudio.onerror = () => {
+      audioIsPlaying = false;
+      setAgentSpeaking(false);
+      addAgentMessage("No he podido reproducir el audio de la respuesta.", "idle");
+    };
+
+    try {
+      await assistantAudio.play();
+    } catch (error) {
+      console.error(error);
+      audioIsPlaying = false;
+      setAgentSpeaking(false);
+      addAgentMessage("El navegador bloqueó la reproducción del audio.", "idle");
+    }
+  }
+
+  async function playAssistantAudioBase64(base64Audio) {
+    stopAssistantAudio();
+
+    audioIsPlaying = true;
+    setAgentSpeaking(true);
+    setStatus("TresPi está hablando...", true);
+
+    assistantAudio = new Audio("data:audio/wav;base64," + base64Audio);
+
+    assistantAudio.onended = () => {
+      audioIsPlaying = false;
+      setAgentSpeaking(false);
+      setStatus("Escuchando...", true);
+    };
+
+    assistantAudio.onerror = () => {
+      audioIsPlaying = false;
+      setAgentSpeaking(false);
+      addAgentMessage("No he podido reproducir el audio generado por el TTS.", "idle");
+    };
+
+    try {
+      await assistantAudio.play();
+    } catch (error) {
+      console.error(error);
+      audioIsPlaying = false;
+      setAgentSpeaking(false);
+      addAgentMessage("El navegador bloqueó la reproducción del audio.", "idle");
+    }
+  }
+
+  async function playAssistantAudioFromBlob(blob) {
+    stopAssistantAudio();
+
+    audioIsPlaying = true;
+    setAgentSpeaking(true);
+    setStatus("TresPi está hablando...", true);
+
+    const audioUrl = URL.createObjectURL(blob);
+    assistantAudio = new Audio(audioUrl);
+
+    assistantAudio.onended = () => {
+      URL.revokeObjectURL(audioUrl);
+      audioIsPlaying = false;
+      setAgentSpeaking(false);
+      setStatus("Escuchando...", true);
+    };
+
+    assistantAudio.onerror = () => {
+      URL.revokeObjectURL(audioUrl);
+      audioIsPlaying = false;
+      setAgentSpeaking(false);
+      addAgentMessage("No he podido reproducir el audio recibido.", "idle");
+    };
+
+    try {
+      await assistantAudio.play();
+    } catch (error) {
+      console.error(error);
+      audioIsPlaying = false;
+      setAgentSpeaking(false);
+      addAgentMessage("El navegador bloqueó la reproducción del audio.", "idle");
+    }
+  }
+
+  function stopAssistantAudio() {
+    if (assistantAudio) {
+      assistantAudio.pause();
+      assistantAudio.currentTime = 0;
+      assistantAudio = null;
+    }
+
+    audioIsPlaying = false;
+    setAgentSpeaking(false);
+  }
+
+  function clearChat() {
+    chat.innerHTML = `
+      <div class="message-row agent">
+        ${hedgehogHTML("idle")}
+        <div class="bubble">
+          <span class="speaker-name">TresPi</span>
+          Chat limpiado. Pulsa “Iniciar conversación” para comenzar de nuevo.
+          <span class="time">${getCurrentTime()}</span>
+        </div>
+      </div>
+    `;
+
+    conversationActive = false;
+    setStatus("Conversación detenida", false);
+    scrollToBottom();
+  }
+
+  function newConversation() {
+    if (conversationActive) {
+      stopConversationLocally();
+    }
+
+    conversationCounter++;
+
+    chat.innerHTML = `
+      <div class="message-row agent">
+        ${hedgehogHTML("idle")}
+        <div class="bubble">
+          <span class="speaker-name">TresPi</span>
+          Nueva conversación creada. Cuando quieras, pulsa “Iniciar conversación”.
+          <span class="time">${getCurrentTime()}</span>
+        </div>
+      </div>
+    `;
+
+    conversationActive = false;
+    setStatus("Nueva conversación preparada", false);
+
+    createHistoryItem(`Conversación ${conversationCounter}`, `Hoy · ${getCurrentTime()}`);
+    closeSidebar();
+    scrollToBottom();
+  }
+
+  function openSettings() {
+    addAgentMessage(
+      "Panel de configuración abierto. Aquí podríais conectar opciones como micrófono, voz del TTS o idioma.",
+      "idle"
+    );
+  }
+
+  window.addEventListener("beforeunload", () => {
+    if (conversationActive) {
+      stopConversationLocally();
+    }
+  });
+</script>
+</body>
+</html>
